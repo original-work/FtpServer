@@ -1,0 +1,141 @@
+#!/bin/sh
+# 2005.12.30 created
+clear
+service FtpServer stop
+install_j2se(){
+	if [ ! -x /usr/java/jdk1.6.0_20/bin/java ]; then
+		if [ ! -x ./jdk-6u20-linux-i586.bin ]; then
+			echo `pwd`/./jdk-6u20-linux-i586.bin not found
+			exit 6
+		fi
+		[ -d /usr/java ] || mkdir /usr/java
+		echo j2se install file copying.........
+		cp ./jdk-6u20-linux-i586.bin /usr/java
+		nowPath=`pwd`
+		cd /usr/java
+		/usr/java/jdk-6u20-linux-i586.bin
+		rm -f /usr/java/jdk-6u20-linux-i586.bin
+		cd $nowPath
+	fi
+	echo j2se install ok.......
+}
+install_j2se_jump(){
+	echo there has already j2se5.0 installed , jump this step. 
+}
+clear_oldversion(){
+	echo clearing old version......
+	if [ -d /usr/FtpServer ]; then
+		rm -f -r /usr/FtpServer
+	fi
+	if [ -f /etc/init.d/FtpServer ]; then
+		rm -f /etc/init.d/FtpServer
+	fi
+	echo uninstall ok.
+}
+install(){
+	echo $"*****************************************************"
+	echo $"*                                                   *"
+	echo $"*    install j2se5.0 as FtpServer runtime environment    *"
+	echo $"*                                                   *"
+	echo $"*****************************************************"
+
+	[ ! -x /usr/java/jdk1.5.0_12/bin/java ] && install_j2se || install_j2se_jump
+
+	echo $"*****************************************************"
+	echo $"*                                                   *"
+	echo $"*             install FtpServer as service ...            *"
+	echo $"*                                                   *"
+	echo $"*****************************************************"
+
+	# set directory
+	echo "init FtpServer directories ......"
+	[ -d /usr/FtpServer ] || mkdir /usr/FtpServer 
+	[ -d /usr/ftp ] || mkdir /usr/ftp 
+	[ -d /usr/cdr ] || mkdir /usr/cdr
+	[ -d /usr/ftp/toftp ] || mkdir /usr/ftp/toftp 
+	[ -d /usr/ftp/ftped ] || mkdir /usr/ftp/ftped 
+	[ -d /usr/FtpServer/bin ] || mkdir /usr/FtpServer/bin
+	# copy all file to /usr/FtpServer
+	echo copy files to dest directory.....
+	cp -rf FtpServer.jar /usr/FtpServer
+	if [ ! -f /usr/FtpServer/FtpServer.jar ]; then
+		echo copy FtpServer.jar to /usr/FtpServer/FtpServer.jar failed
+		exit 1
+	fi
+	cp -rf bin /usr/FtpServer
+	if [ ! -d /usr/FtpServer/bin ]; then
+		echo copy bin to /usr/FtpServer failed
+		exit 1
+	fi
+        cp -rf conf /usr/FtpServer
+        if [ ! -d /usr/FtpServer/conf ]; then
+                echo copy conf to /usr/FtpServer failed
+                exit 1
+        fi
+
+	cp -rf run /usr/FtpServer
+        if [ ! -d /usr/FtpServer/run ]; then
+                echo copy run to /usr/FtpServer failed
+                exit 1
+        fi
+	
+	[ ! -d /usr/FtpServer/log ] && mkdir /usr/FtpServer/log
+
+	# set autofork
+	echo setup autofork.......
+	if [ ! -x /usr/FtpServer/bin/autofork ]; then
+		cp -f bin/autofork /usr/FtpServer/bin/
+		if [ "$?" -ne "0" ]; then
+			echo "autofork not found"
+			exit 2
+		fi
+	fi	
+
+	# copy lib to /usr/FtpServer/lib
+	echo copy libraries to lib.....
+	cp -rf lib /usr/FtpServer
+	if [ ! -d /usr/FtpServer/lib ]; then
+		echo copy lib to /usr/FtpServer failed
+		exit 3
+	fi
+
+	# copy FtpServer to init.d
+	echo install FtpServer service......
+	cp bin/FtpServer /etc/rc.d/init.d/
+	if [ "$?" -ne "0" ]; then
+		if [ ! -x /etc/rc.d/init.d/FtpServer ]; then
+			echo copy FtpServer to /etc/rc.d/init.d failed
+			exit 4
+		fi
+	fi
+	echo creating link......
+	ln -f -s /etc/init.d/FtpServer /etc/rc.d/rc3.d/S99zFtpServer
+	ln -f -s /etc/init.d/FtpServer /etc/rc.d/rc5.d/S99zFtpServer
+	if [ ! -e /etc/rc.d/rc3.d/S99zFtpServer ]; then
+		if [ "$?" -ne "0" ]; then
+			echo create link failed
+			exit 5
+		fi
+	fi
+
+	echo install ok
+}
+
+# See how we ware called
+case "$1" in
+  u)
+	clear_oldversion 
+        ;;
+  r)
+        clear_oldversion
+	install
+        ;;
+  i)
+        install
+        ;;
+  *)
+        echo  $"Usage: $0 {u|r|i}"
+        exit 1
+esac
+
+exit $RETVAL

@@ -1,0 +1,9 @@
+mkdir FtpServer_install
+cd FtpServer_install
+mv ../pack_FtpServer.tgz .
+tar xzvf pack_FtpServer.tgz
+cd install
+./install.sh r
+cd ../..
+mv FtpServer_install/pack_FtpServer.tgz .
+rm -rf FtpServer_install

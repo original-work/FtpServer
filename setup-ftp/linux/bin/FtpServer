@@ -1,0 +1,123 @@
+#!/bin/sh 
+#
+# chkconfig: 35 97 02  
+# description:  The FtpServer service
+# sysname: FtpServer
+#
+# 2005.12.30 created
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Get config.
+. /etc/sysconfig/network
+
+# Check that networking is up.
+if [ ${NETWORKING} = "no" ] ; then
+        exit 0
+fi
+
+# Set sys
+sys="FtpServer"
+
+# Check prog
+prog="/usr/FtpServer/bin/autofork"
+[ -x $prog ] || exit 0
+
+# Check cfg
+cfg="/usr/FtpServer/conf/autofork.cfg"
+[ -f $cfg ] || exit 0
+
+ulimit -S -c 10000000 > /dev/null 2>&1
+
+# set env
+env="/usr/FtpServer/conf/autofork.env"
+[ -f $env ] && . $env
+
+RETVAL=0
+
+start() {
+	echo -n $"Starting $sys: "
+        pid=`$prog -cfg=$cfg -showpid`
+        if [ -z "$pid" ]; then
+                $prog -cfg=$cfg -daemon >/dev/null 2>&1
+        fi
+        RETVAL=$?
+        if [ "$RETVAL" -eq "0" ]; then
+                success
+        else
+                failure
+        fi
+        echo
+        touch /var/lock/subsys/FtpServer
+        return $RETVAL
+}
+
+stop() {
+        pid=`$prog -cfg=$cfg -showpid`
+        echo -n $"Shutting down $sys: "
+        if [ -z "$pid" ]; then
+                failure
+        else
+                kill -15 $pid
+                while [ -n "`$prog -cfg=$cfg -showpid`" ];
+                do
+                        sleep 1;
+                done
+                success
+        fi
+        echo
+        rm -f /var/lock/subsys/FtpServer
+        return $RETVA
+}
+
+reload() {
+        pid=`$prog -cfg=$cfg -showpid`
+        echo -n $"Reloading $sys: " 
+        if [ -z "$pid" ]; then
+                failure
+        else
+                kill -HUP $pid
+                success
+        fi
+        echo
+        return $RETVAL
+}
+
+status() {
+        pid=`$prog -cfg=$cfg -showpid`
+        if [ -n "$pid" ]; then
+                echo -n "$sys is running, pid is " # $pid"
+                $prog -cfg=$cfg -showpids
+                return 0
+        else
+                echo "$sys is not started"
+                return 3
+        fi
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  status)
+        status
+        ;;
+  restart)
+        stop
+        sleep 1
+        start
+        ;;
+  reload)
+        reload
+        ;;
+  *)
+        echo  $"Usage: $0 {start|stop|status|restart|reload}"
+        exit 1
+esac
+
+exit $RETVAL

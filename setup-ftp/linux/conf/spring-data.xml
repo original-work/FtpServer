@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
+	
+
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"  value="${interceptor.driverName}" />
+		<property name="url" value="${interceptor.url}" />
+		<property name="username" value="${interceptor.user}" />
+		<property name="password" value="${interceptor.password}" />
+	</bean>
+
+	<bean id="jdbcTemplate"
+		class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+	
+
+	<!-- ####################################### -->
+	<!--          Dao Spring Beans               -->
+	<!-- ####################################### -->
+	<bean id="dbtools" class="com.sensible.app.db.DBTools">
+		<property name="template" ref="jdbcTemplate" />
+	</bean>
+	
+</beans>

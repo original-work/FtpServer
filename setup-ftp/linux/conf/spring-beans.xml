@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>/conf/db.properties</value>
+				<value>/conf/ftp.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	
+	<!-- BOSS FTP -->
+
+  <bean id="ConfigInfo" class="com.sensible.app.data.ConfigInfo">
+		<property name="rnmftp_ip" value="${rnmftp.ip}" />
+		<property name="rnmftp_port" value="${rnmftp.port}" />
+		<property name="rnmftp_user" value="${rnmftp.user}" />
+		<property name="rnmftp_password" value="${rnmftp.pass}" />
+		<property name="ftp_tmppath" value="${ftp.tmppath}" />
+		<property name="rnmftp_requestpath" value="${rnmftp.requestpath}" />
+		<property name="rnmftp_resultpath" value="${rnmftp.resultpath}" />
+		<property name="threadmgr_checkinterval" value="${threadmgr.checkinterval}" />
+		<property name="threadmgr_restartinterval" value="${threadmgr.restartinterval}" />
+	</bean>
+	
+</beans>

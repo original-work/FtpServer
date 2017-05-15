@@ -1,0 +1,74 @@
+<project name="FtpServer" default="pack" basedir=".">
+	<description>simple example build file</description>
+	<!-- set global properties for this build -->
+	<property name="proj" value="FtpServer"/>
+	<property name="src" value="..\src"/>
+	<property name="build" location="build/FtpServer"/>
+	<property name="mainClass" value="com.sensible.app.FtpServer"/>
+	<property name="jarClassPath" value="lib/aspectjrt.jar lib/aspectjweaver.jar lib/backport-util-concurrent-2.1.jar lib/commons-collections.jar lib/commons-dbcp.jar lib/commons-lang.jar lib/commons-lang.jar lib/commons-logging.jar lib/commons-net-2.2.jar lib/commons-pool.jar lib/hsqldb.jar lib/log4j-1.2.14.jar lib/mysql-connector-java-5.0.8-bin.jar lib/quartz-1.5.2.jar lib/spring.jar lib/spring-mock.jar lib/snmphibernate-api.jar lib/snmphibernate-snmp4j.jar"/>
+
+	<property name="lib" location="linux/lib"/>
+
+	<property name="dist"  location="dist"/>
+
+	<path id="project.class.path">
+		<fileset dir="${lib}" casesensitive="yes">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp/>
+		<!-- Create the build directory structure used by compile -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+		<delete file="${basedir}/pack_FtpServer.tgz"/>
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="cnpmpile" depends="init"
+		description="compile the source " >
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}" includeAntRuntime="false" debug="on">
+			<classpath refid="project.class.path"/>
+		</javac>
+	</target>
+
+	<target name="dist" depends="cnpmpile" description="generate the distribution" >
+		<!-- Create the distribution directory -->
+		<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+		<mkdir dir="${dist}"/>
+		<jar jarfile="${dist}/${proj}.jar" basedir="${build}">
+			<manifest>
+				<attribute name="Main-Class" value="${mainClass}"/>
+				<attribute name="Class-Path" value="${jarClassPath}"/>
+			</manifest>
+		</jar>
+	</target>
+
+
+	<target name="pack" depends="dist" description="generate the distribution">
+		<tar destfile="${basedir}/install.tar">
+			<tarfileset dir="${basedir}/linux"
+					prefix="install"
+					preserveLeadingSlashes="true"
+					mode="755" 
+					username="root"/>
+			<tarfileset dir="${dist}"
+					prefix="install"
+					preserveLeadingSlashes="true">
+				<include name="${proj}.jar"/>
+			</tarfileset>
+		</tar>
+		<gzip zipfile="${basedir}/pack_FtpServer.tgz" src="${basedir}/install.tar"/>
+		<delete file="${basedir}/install.tar"/>
+	</target>
+
+	<target name="clean"
+		description="clean up" >
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+	</target>
+</project>
